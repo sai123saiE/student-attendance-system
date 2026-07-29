@@ -1,0 +1,1174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>The Roll Call — Attendance Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #1b1f2a;
+        --paper: #fbf9f4;
+        --paper-line: #dcd4c2;
+        --green: #1f3a2e;
+        --green-soft: #284a3b;
+        --brass: #b8863b;
+        --brass-soft: #e4c88f;
+        --present: #2f6b4f;
+        --present-soft: #dceae2;
+        --absent: #a6412f;
+        --absent-soft: #f3ded9;
+        --muted: #6b6656;
+        --radius: 10px;
+        --shadow:
+          0 1px 2px rgba(27, 31, 42, 0.06), 0 8px 24px rgba(27, 31, 42, 0.06);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--green);
+        background-image:
+          radial-gradient(
+            circle at 15% 10%,
+            rgba(255, 255, 255, 0.04),
+            transparent 45%
+          ),
+          radial-gradient(
+            circle at 85% 90%,
+            rgba(255, 255, 255, 0.03),
+            transparent 40%
+          );
+        font-family: "IBM Plex Sans", sans-serif;
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex;
+      }
+      ::selection {
+        background: var(--brass-soft);
+      }
+      a {
+        color: inherit;
+      }
+      button {
+        font-family: inherit;
+      }
+
+      /* ---------- Sidebar ---------- */
+      .sidebar {
+        width: 230px;
+        flex-shrink: 0;
+        background: var(--green);
+        color: #efe9d8;
+        padding: 28px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .brand {
+        font-family: "Fraunces", serif;
+        font-weight: 700;
+        font-size: 22px;
+        letter-spacing: 0.01em;
+        color: #f7f3e7;
+        margin: 2px 6px 4px;
+        line-height: 1.15;
+      }
+      .brand small {
+        display: block;
+        font-family: "IBM Plex Mono", monospace;
+        font-weight: 400;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--brass-soft);
+        margin-top: 6px;
+      }
+      .nav {
+        margin-top: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .nav-item {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: #d8d2be;
+        font-size: 14.5px;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .nav-item .idx {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--brass-soft);
+        opacity: 0.8;
+      }
+      .nav-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: #f7f3e7;
+      }
+      .nav-item.active {
+        background: #f7f3e7;
+        color: var(--green);
+        font-weight: 600;
+      }
+      .nav-item.active .idx {
+        color: var(--brass);
+        opacity: 1;
+      }
+
+      .sidebar-foot {
+        margin-top: auto;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10.5px;
+        color: #9c967f;
+        padding: 0 6px;
+        line-height: 1.6;
+      }
+
+      /* ---------- Main ---------- */
+      .main {
+        flex: 1;
+        background: var(--paper);
+        background-image: repeating-linear-gradient(
+          to bottom,
+          transparent 0px,
+          transparent 37px,
+          var(--paper-line) 38px
+        );
+        min-height: 100vh;
+        padding: 40px 48px 60px;
+      }
+      .page {
+        display: none;
+        max-width: 980px;
+      }
+      .page.active {
+        display: block;
+        animation: fadein 0.25s ease;
+      }
+      @keyframes fadein {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .page-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 26px;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .page-head h1 {
+        font-family: "Fraunces", serif;
+        font-size: 30px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
+      .page-head p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .eyebrow {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--brass);
+        margin: 0 0 6px;
+      }
+
+      .grid-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 30px;
+      }
+      .stat-card {
+        background: #fff;
+        border: 1px solid var(--paper-line);
+        border-radius: var(--radius);
+        padding: 18px 18px;
+        box-shadow: var(--shadow);
+      }
+      .stat-card .n {
+        font-family: "Fraunces", serif;
+        font-size: 32px;
+        font-weight: 600;
+        line-height: 1;
+      }
+      .stat-card .l {
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-top: 8px;
+      }
+      .stat-card.warn .n {
+        color: var(--absent);
+      }
+      .stat-card.good .n {
+        color: var(--present);
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid var(--paper-line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 22px 24px;
+        margin-bottom: 20px;
+      }
+      .card h2 {
+        font-family: "Fraunces", serif;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 14px;
+      }
+
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field label {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .field input,
+      .field select {
+        border: 1px solid var(--paper-line);
+        background: #fefdfb;
+        border-radius: 7px;
+        padding: 9px 11px;
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--ink);
+        min-width: 160px;
+      }
+      .field input:focus,
+      .field select:focus {
+        outline: 2px solid var(--brass-soft);
+        outline-offset: 1px;
+        border-color: var(--brass);
+      }
+
+      .btn {
+        border: none;
+        border-radius: 7px;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--green);
+        color: #f7f3e7;
+        transition:
+          background 0.15s ease,
+          transform 0.05s ease;
+      }
+      .btn:hover {
+        background: var(--green-soft);
+      }
+      .btn:active {
+        transform: scale(0.98);
+      }
+      .btn.secondary {
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--paper-line);
+      }
+      .btn.secondary:hover {
+        background: #f3efe4;
+      }
+      .btn.small {
+        padding: 6px 12px;
+        font-size: 12.5px;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th {
+        text-align: left;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 600;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--paper-line);
+      }
+      td {
+        padding: 10px 10px;
+        border-bottom: 1px solid #f0ebdd;
+        vertical-align: middle;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      .roll {
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--muted);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 100px;
+      }
+      .pill.present {
+        background: var(--present-soft);
+        color: var(--present);
+      }
+      .pill.absent {
+        background: var(--absent-soft);
+        color: var(--absent);
+      }
+      .pill.neutral {
+        background: #efead9;
+        color: var(--muted);
+      }
+
+      .empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--muted);
+      }
+      .empty .stamp-outline {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 14px;
+        border: 2px dashed var(--paper-line);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Fraunces", serif;
+        font-size: 22px;
+        color: var(--paper-line);
+      }
+
+      /* Roll-call stamp control (signature element) */
+      .roll-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 6px;
+        border-bottom: 1px solid #f0ebdd;
+      }
+      .roll-row:last-child {
+        border-bottom: none;
+      }
+      .roll-who {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+      .roll-who .roll {
+        min-width: 34px;
+      }
+      .roll-who .name {
+        font-weight: 500;
+      }
+      .stamp-group {
+        display: flex;
+        gap: 8px;
+      }
+      .stamp {
+        width: 88px;
+        height: 40px;
+        border-radius: 8px;
+        border: 2px solid var(--paper-line);
+        background: #fff;
+        color: var(--muted);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.08s ease,
+          border-color 0.15s,
+          color 0.15s,
+          background 0.15s;
+      }
+      .stamp:hover {
+        transform: translateY(-1px);
+      }
+      .stamp.p.active {
+        background: var(--present);
+        border-color: var(--present);
+        color: #fff;
+        transform: rotate(-2deg);
+      }
+      .stamp.a.active {
+        background: var(--absent);
+        border-color: var(--absent);
+        color: #fff;
+        transform: rotate(2deg);
+      }
+
+      .bar-bg {
+        width: 100%;
+        height: 8px;
+        border-radius: 100px;
+        background: #efead9;
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 100px;
+        background: var(--present);
+      }
+      .bar-fill.low {
+        background: var(--absent);
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--green);
+        color: #f7f3e7;
+        padding: 12px 18px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
+        pointer-events: none;
+        font-family: "IBM Plex Mono", monospace;
+        z-index: 50;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: none;
+      }
+
+      .flex-between {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .icon-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 16px;
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+      .icon-btn:hover {
+        background: #f3efe4;
+        color: var(--absent);
+      }
+
+      @media (max-width: 800px) {
+        body {
+          flex-direction: column;
+        }
+        .sidebar {
+          width: 100%;
+          flex-direction: row;
+          overflow-x: auto;
+          padding: 14px;
+        }
+        .brand {
+          display: none;
+        }
+        .nav {
+          margin-top: 0;
+          flex-direction: row;
+        }
+        .sidebar-foot {
+          display: none;
+        }
+        .main {
+          padding: 26px 18px 50px;
+        }
+        .grid-stats {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="brand">
+        The Roll Call<small>Register &amp; Attendance</small>
+      </div>
+      <div class="nav">
+        <div class="nav-item active" data-page="dashboard">
+          <span class="idx">I</span> Dashboard
+        </div>
+        <div class="nav-item" data-page="students">
+          <span class="idx">II</span> Students
+        </div>
+        <div class="nav-item" data-page="attendance">
+          <span class="idx">III</span> Take Attendance
+        </div>
+        <div class="nav-item" data-page="reports">
+          <span class="idx">IV</span> Reports
+        </div>
+      </div>
+      <div class="sidebar-foot">
+        Data saved automatically<br />to your account.
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Today — <span id="today-label"></span></p>
+            <h1>Dashboard</h1>
+            <p>An overview of the register across every class.</p>
+          </div>
+          <button class="btn" onclick="go('attendance')">
+            Take today's attendance
+          </button>
+        </div>
+
+        <div class="grid-stats">
+          <div class="stat-card">
+            <div class="n" id="stat-students">0</div>
+            <div class="l">Students enrolled</div>
+          </div>
+          <div class="stat-card">
+            <div class="n" id="stat-courses">0</div>
+            <div class="l">Classes running</div>
+          </div>
+          <div class="stat-card good">
+            <div class="n" id="stat-avg">—</div>
+            <div class="l">Overall attendance rate</div>
+          </div>
+          <div class="stat-card warn">
+            <div class="n" id="stat-risk">0</div>
+            <div class="l">Students below 75%</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Students to watch</h2>
+          <div id="watch-list"></div>
+        </div>
+
+        <div class="card">
+          <h2>Recent roll calls</h2>
+          <div id="recent-list"></div>
+        </div>
+      </div>
+
+      <!-- STUDENTS -->
+      <div class="page" id="page-students">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Register</p>
+            <h1>Students</h1>
+            <p>Add every student once. Assign them to a class below.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Add a student</h2>
+          <div class="row">
+            <div class="field">
+              <label>Full name</label
+              ><input id="in-name" placeholder="e.g. Ananya Rao" />
+            </div>
+            <div class="field">
+              <label>Roll number</label
+              ><input id="in-roll" placeholder="e.g. CS-014" />
+            </div>
+            <div class="field">
+              <label>Class</label
+              ><select id="in-course"></select>
+            </div>
+            <button class="btn" onclick="addStudent()">Add student</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Manage classes</h2>
+          <div class="row">
+            <div class="field">
+              <label>New class name</label
+              ><input id="in-course-name" placeholder="e.g. B.Sc CS — Year 2" />
+            </div>
+            <button class="btn secondary" onclick="addCourse()">
+              Add class
+            </button>
+          </div>
+          <div id="course-list" style="margin-top: 14px"></div>
+        </div>
+
+        <div class="card">
+          <div class="flex-between">
+            <h2 style="margin-bottom: 0">All students</h2>
+            <select
+              id="filter-course"
+              onchange="renderStudents()"
+              style="
+                border: 1px solid var(--paper-line);
+                border-radius: 7px;
+                padding: 7px 10px;
+                font-size: 13px;
+              "
+            ></select>
+          </div>
+          <div id="student-table" style="margin-top: 12px"></div>
+        </div>
+      </div>
+
+      <!-- ATTENDANCE -->
+      <div class="page" id="page-attendance">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Roll call</p>
+            <h1>Take Attendance</h1>
+            <p>
+              Pick a class and date, then stamp each student present or absent.
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row">
+            <div class="field">
+              <label>Class</label
+              ><select id="att-course" onchange="renderRollCall()"></select>
+            </div>
+            <div class="field">
+              <label>Date</label
+              ><input type="date" id="att-date" onchange="renderRollCall()" />
+            </div>
+            <button class="btn secondary small" onclick="markAll('present')">
+              Mark all present
+            </button>
+            <button class="btn secondary small" onclick="markAll('absent')">
+              Mark all absent
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="flex-between">
+            <h2 style="margin-bottom: 0">Roll call sheet</h2>
+            <span class="muted" id="att-summary" style="font-size: 13px"></span>
+          </div>
+          <div id="roll-call-body" style="margin-top: 8px"></div>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="page" id="page-reports">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Ledger summary</p>
+            <h1>Reports</h1>
+            <p>
+              Attendance percentage by student, across all recorded roll calls.
+            </p>
+          </div>
+          <select
+            id="report-course"
+            onchange="renderReports()"
+            style="
+              border: 1px solid var(--paper-line);
+              border-radius: 7px;
+              padding: 9px 12px;
+              font-size: 14px;
+            "
+          ></select>
+        </div>
+
+        <div class="card">
+          <div id="report-table"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      /* ---------------- State ---------------- */
+      let students = []; // {id, name, roll, courseId}
+      let courses = []; // {id, name}
+      let attendance = {}; // key `${date}|${courseId}` -> { studentId: 'present'|'absent' }
+      let loaded = false;
+
+      const uid = () => Math.random().toString(36).slice(2, 10);
+
+      async function loadAll() {
+        try {
+          const s = await window.storage.get("students");
+          students = s ? JSON.parse(s.value) : [];
+        } catch (e) {
+          students = [];
+        }
+        try {
+          const c = await window.storage.get("courses");
+          courses = c ? JSON.parse(c.value) : [];
+        } catch (e) {
+          courses = [];
+        }
+        try {
+          const a = await window.storage.get("attendance");
+          attendance = a ? JSON.parse(a.value) : {};
+        } catch (e) {
+          attendance = {};
+        }
+
+        if (courses.length === 0) {
+          courses = [
+            { id: uid(), name: "B.Sc Computer Science — Year 2" },
+            { id: uid(), name: "B.Com — Year 1" },
+          ];
+          await saveCourses();
+        }
+        if (students.length === 0) {
+          const c0 = courses[0].id,
+            c1 = courses[1] ? courses[1].id : courses[0].id;
+          students = [
+            { id: uid(), name: "Ananya Rao", roll: "CS-014", courseId: c0 },
+            { id: uid(), name: "Rohan Mehta", roll: "CS-015", courseId: c0 },
+            { id: uid(), name: "Priya Nair", roll: "CS-016", courseId: c0 },
+            { id: uid(), name: "Kabir Singh", roll: "BC-002", courseId: c1 },
+            { id: uid(), name: "Sara Iyer", roll: "BC-003", courseId: c1 },
+          ];
+          await saveStudents();
+        }
+        loaded = true;
+      }
+
+      async function saveStudents() {
+        await window.storage.set("students", JSON.stringify(students), false);
+      }
+      async function saveCourses() {
+        await window.storage.set("courses", JSON.stringify(courses), false);
+      }
+      async function saveAttendance() {
+        await window.storage.set(
+          "attendance",
+          JSON.stringify(attendance),
+          false,
+        );
+      }
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => t.classList.remove("show"), 2200);
+      }
+
+      /* ---------------- Navigation ---------------- */
+      function go(page) {
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((n) => n.classList.remove("active"));
+        document.getElementById("page-" + page).classList.add("active");
+        document
+          .querySelector(`.nav-item[data-page="${page}"]`)
+          .classList.add("active");
+        if (page === "dashboard") renderDashboard();
+        if (page === "students") renderStudents();
+        if (page === "attendance") renderRollCall();
+        if (page === "reports") renderReports();
+      }
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        item.addEventListener("click", () => go(item.dataset.page));
+      });
+
+      /* ---------------- Courses ---------------- */
+      async function addCourse() {
+        const name = document.getElementById("in-course-name").value.trim();
+        if (!name) {
+          showToast("Enter a class name first");
+          return;
+        }
+        courses.push({ id: uid(), name });
+        await saveCourses();
+        document.getElementById("in-course-name").value = "";
+        populateCourseSelects();
+        renderCourseList();
+        showToast("Class added");
+      }
+
+      async function removeCourse(id) {
+        if (students.some((s) => s.courseId === id)) {
+          showToast("Move or remove students from this class first");
+          return;
+        }
+        courses = courses.filter((c) => c.id !== id);
+        await saveCourses();
+        populateCourseSelects();
+        renderCourseList();
+      }
+
+      function renderCourseList() {
+        const el = document.getElementById("course-list");
+        if (courses.length === 0) {
+          el.innerHTML = '<p class="muted">No classes yet.</p>';
+          return;
+        }
+        el.innerHTML = courses
+          .map((c) => {
+            const count = students.filter((s) => s.courseId === c.id).length;
+            return `<div class="roll-row"><span>${escapeHtml(c.name)} <span class="muted">— ${count} student${count === 1 ? "" : "s"}</span></span>
+      <button class="icon-btn" onclick="removeCourse('${c.id}')" title="Remove class">✕</button></div>`;
+          })
+          .join("");
+      }
+
+      function populateCourseSelects() {
+        const opts = courses
+          .map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`)
+          .join("");
+        document.getElementById("in-course").innerHTML =
+          opts || '<option value="">No classes yet</option>';
+        document.getElementById("att-course").innerHTML =
+          opts || '<option value="">No classes yet</option>';
+        document.getElementById("filter-course").innerHTML =
+          '<option value="all">All classes</option>' + opts;
+        document.getElementById("report-course").innerHTML =
+          '<option value="all">All classes</option>' + opts;
+      }
+
+      /* ---------------- Students ---------------- */
+      async function addStudent() {
+        const name = document.getElementById("in-name").value.trim();
+        const roll = document.getElementById("in-roll").value.trim();
+        const courseId = document.getElementById("in-course").value;
+        if (!name || !roll || !courseId) {
+          showToast("Fill in name, roll number, and class");
+          return;
+        }
+        students.push({ id: uid(), name, roll, courseId });
+        await saveStudents();
+        document.getElementById("in-name").value = "";
+        document.getElementById("in-roll").value = "";
+        renderStudents();
+        showToast("Student added");
+      }
+
+      async function removeStudent(id) {
+        students = students.filter((s) => s.id !== id);
+        await saveStudents();
+        renderStudents();
+      }
+
+      function courseName(id) {
+        const c = courses.find((c) => c.id === id);
+        return c ? c.name : "—";
+      }
+
+      function renderStudents() {
+        const filter = document.getElementById("filter-course").value || "all";
+        const list = students.filter(
+          (s) => filter === "all" || s.courseId === filter,
+        );
+        const el = document.getElementById("student-table");
+        if (list.length === 0) {
+          el.innerHTML = `<div class="empty"><div class="stamp-outline">✎</div>No students in this view yet.</div>`;
+          return;
+        }
+        el.innerHTML = `<table><thead><tr><th>Roll</th><th>Name</th><th>Class</th><th></th></tr></thead><tbody>
+    ${list
+      .map(
+        (s) => `<tr>
+      <td class="roll">${escapeHtml(s.roll)}</td>
+      <td>${escapeHtml(s.name)}</td>
+      <td class="muted">${escapeHtml(courseName(s.courseId))}</td>
+      <td style="text-align:right;"><button class="icon-btn" onclick="removeStudent('${s.id}')" title="Remove student">✕</button></td>
+    </tr>`,
+      )
+      .join("")}
+  </tbody></table>`;
+      }
+
+      /* ---------------- Attendance ---------------- */
+      function todayStr() {
+        const d = new Date();
+        return d.toISOString().slice(0, 10);
+      }
+
+      function attKey(date, courseId) {
+        return date + "|" + courseId;
+      }
+
+      function renderRollCall() {
+        const courseId = document.getElementById("att-course").value;
+        const date = document.getElementById("att-date").value || todayStr();
+        document.getElementById("att-date").value = date;
+        const key = attKey(date, courseId);
+        const record = attendance[key] || {};
+        const list = students.filter((s) => s.courseId === courseId);
+        const body = document.getElementById("roll-call-body");
+
+        if (!courseId) {
+          body.innerHTML = `<div class="empty"><div class="stamp-outline">＋</div>Add a class first, on the Students page.</div>`;
+          document.getElementById("att-summary").textContent = "";
+          return;
+        }
+        if (list.length === 0) {
+          body.innerHTML = `<div class="empty"><div class="stamp-outline">＋</div>No students enrolled in this class yet.</div>`;
+          document.getElementById("att-summary").textContent = "";
+          return;
+        }
+
+        body.innerHTML = list
+          .map((s) => {
+            const status = record[s.id];
+            return `<div class="roll-row">
+      <div class="roll-who"><span class="roll">${escapeHtml(s.roll)}</span><span class="name">${escapeHtml(s.name)}</span></div>
+      <div class="stamp-group">
+        <button class="stamp p ${status === "present" ? "active" : ""}" onclick="setStatus('${key}','${s.id}','present')">Present</button>
+        <button class="stamp a ${status === "absent" ? "active" : ""}" onclick="setStatus('${key}','${s.id}','absent')">Absent</button>
+      </div>
+    </div>`;
+          })
+          .join("");
+
+        const marked = list.filter((s) => record[s.id]).length;
+        const present = list.filter((s) => record[s.id] === "present").length;
+        document.getElementById("att-summary").textContent =
+          `${marked}/${list.length} marked · ${present} present`;
+      }
+
+      async function setStatus(key, studentId, status) {
+        if (!attendance[key]) attendance[key] = {};
+        attendance[key][studentId] =
+          attendance[key][studentId] === status ? undefined : status;
+        if (attendance[key][studentId] === undefined)
+          delete attendance[key][studentId];
+        await saveAttendance();
+        renderRollCall();
+      }
+
+      async function markAll(status) {
+        const courseId = document.getElementById("att-course").value;
+        const date = document.getElementById("att-date").value || todayStr();
+        const key = attKey(date, courseId);
+        if (!attendance[key]) attendance[key] = {};
+        students
+          .filter((s) => s.courseId === courseId)
+          .forEach((s) => {
+            attendance[key][s.id] = status;
+          });
+        await saveAttendance();
+        renderRollCall();
+        showToast("Marked all " + status);
+      }
+
+      /* ---------------- Reports ---------------- */
+      function studentStats(studentId) {
+        let present = 0,
+          total = 0;
+        Object.keys(attendance).forEach((key) => {
+          const rec = attendance[key];
+          if (rec[studentId]) {
+            total++;
+            if (rec[studentId] === "present") present++;
+          }
+        });
+        return {
+          present,
+          total,
+          pct: total ? Math.round((present / total) * 100) : null,
+        };
+      }
+
+      function renderReports() {
+        const filter = document.getElementById("report-course").value || "all";
+        const list = students.filter(
+          (s) => filter === "all" || s.courseId === filter,
+        );
+        const el = document.getElementById("report-table");
+        if (list.length === 0) {
+          el.innerHTML = `<div class="empty"><div class="stamp-outline">Σ</div>No students to report on yet.</div>`;
+          return;
+        }
+        const rows = list
+          .map((s) => ({ s, stat: studentStats(s.id) }))
+          .sort((a, b) => (a.stat.pct ?? 999) - (b.stat.pct ?? 999));
+
+        el.innerHTML = `<table><thead><tr><th>Roll</th><th>Name</th><th>Class</th><th>Sessions</th><th style="width:180px;">Attendance</th></tr></thead><tbody>
+    ${rows
+      .map(({ s, stat }) => {
+        if (stat.total === 0) {
+          return `<tr><td class="roll">${escapeHtml(s.roll)}</td><td>${escapeHtml(s.name)}</td><td class="muted">${escapeHtml(courseName(s.courseId))}</td><td class="muted">—</td><td><span class="pill neutral">No records</span></td></tr>`;
+        }
+        const low = stat.pct < 75;
+        return `<tr>
+        <td class="roll">${escapeHtml(s.roll)}</td>
+        <td>${escapeHtml(s.name)}</td>
+        <td class="muted">${escapeHtml(courseName(s.courseId))}</td>
+        <td class="muted">${stat.present}/${stat.total}</td>
+        <td>
+          <div class="flex-between" style="gap:10px;">
+            <div class="bar-bg" style="flex:1;"><div class="bar-fill ${low ? "low" : ""}" style="width:${stat.pct}%;"></div></div>
+            <span class="pill ${low ? "absent" : "present"}">${stat.pct}%</span>
+          </div>
+        </td>
+      </tr>`;
+      })
+      .join("")}
+  </tbody></table>`;
+      }
+
+      /* ---------------- Dashboard ---------------- */
+      function renderDashboard() {
+        document.getElementById("today-label").textContent =
+          new Date().toLocaleDateString(undefined, {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          });
+        document.getElementById("stat-students").textContent = students.length;
+        document.getElementById("stat-courses").textContent = courses.length;
+
+        let present = 0,
+          total = 0;
+        const perStudent = students.map((s) => ({
+          s,
+          stat: studentStats(s.id),
+        }));
+        perStudent.forEach(({ stat }) => {
+          present += stat.present;
+          total += stat.total;
+        });
+        document.getElementById("stat-avg").textContent = total
+          ? Math.round((present / total) * 100) + "%"
+          : "—";
+
+        const atRisk = perStudent.filter(
+          ({ stat }) => stat.total > 0 && stat.pct < 75,
+        );
+        document.getElementById("stat-risk").textContent = atRisk.length;
+
+        const watch = document.getElementById("watch-list");
+        if (atRisk.length === 0) {
+          watch.innerHTML = `<div class="empty"><div class="stamp-outline">✓</div>No students below 75% attendance right now.</div>`;
+        } else {
+          watch.innerHTML = atRisk
+            .sort((a, b) => a.stat.pct - b.stat.pct)
+            .slice(0, 6)
+            .map(
+              ({ s, stat }) => `
+      <div class="roll-row">
+        <div class="roll-who"><span class="roll">${escapeHtml(s.roll)}</span><span class="name">${escapeHtml(s.name)}</span><span class="muted">${escapeHtml(courseName(s.courseId))}</span></div>
+        <span class="pill absent">${stat.pct}%</span>
+      </div>`,
+            )
+            .join("");
+        }
+
+        const recent = document.getElementById("recent-list");
+        const keys = Object.keys(attendance)
+          .filter((k) => Object.keys(attendance[k]).length > 0)
+          .sort((a, b) => b.split("|")[0].localeCompare(a.split("|")[0]))
+          .slice(0, 5);
+        if (keys.length === 0) {
+          recent.innerHTML = `<div class="empty"><div class="stamp-outline">—</div>No roll calls recorded yet.</div>`;
+        } else {
+          recent.innerHTML = keys
+            .map((k) => {
+              const [date, courseId] = k.split("|");
+              const rec = attendance[k];
+              const marked = Object.keys(rec).length;
+              const pres = Object.values(rec).filter(
+                (v) => v === "present",
+              ).length;
+              return `<div class="roll-row">
+        <div class="roll-who"><span class="roll">${date}</span><span class="name">${escapeHtml(courseName(courseId))}</span></div>
+        <span class="muted" style="font-size:13px;">${pres}/${marked} present</span>
+      </div>`;
+            })
+            .join("");
+        }
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[m],
+        );
+      }
+
+      /* ---------------- Init ---------------- */
+      async function init() {
+        document.getElementById("att-date").value = todayStr();
+        await loadAll();
+        populateCourseSelects();
+        renderCourseList();
+        renderStudents();
+        renderRollCall();
+        renderReports();
+        renderDashboard();
+      }
+      init();
+    </script>
+  </body>
+</html>
